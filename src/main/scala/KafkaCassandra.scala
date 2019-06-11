@@ -5,7 +5,9 @@ import com.datastax.spark.connector._
 import org.apache.kafka.clients.consumer.{ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.clients.producer._
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
+
 import scala.collection.JavaConversions._
 
 
@@ -31,20 +33,25 @@ object KafkaCassandra {
     val gameDF= sql.read.json("C:\\Users\\m.dharini\\Documents\\Game-RealTime\\src\\main\\scala\\gameData.json")
     gameDF.printSchema()
     gameDF.show()
-   // gameDF.write.format("org.apache.spark.sql.cassandra").options(Map( "table" -> "winloss", "keyspace" -> "slotty")).save()
-    //val ssc = new StreamingContext(conf, Seconds(1))
+    gameDF.write.format("org.apache.spark.sql.cassandra").options(Map( "table" -> "winloss", "keyspace" -> "slotty")).save()
+    val ssc = new StreamingContext(conf, Seconds(1))
+
+    val df = sparkSession
+      .read
+      .format("org.apache.spark.sql.cassandra")
+      .options(
+        Map(
+          "table" -> "game_transaction_by_upline",
+          "keyspace" -> "slotty"
+        )
+      )
+      .load()
+
+    df.count() should be(1000)
 
     //get a json Record from the API and stream to Kafka
     //write json to the Table "winloss"
 
-//    val rows = "SELECT * From slotty.game_transaction_by_upline LIMIT 3"
-//
-//    val spark: SparkSession = SparkSession
-//      .builder
-//      .appName("Game-RealTime")
-//      .master("local")
-//      .getOrCreate
-//
 //    val jsonS = """{"upline" :"uplineeg","halfdate" : "2019-5-29", "currency":"$","bet_type_ocode":"ocode","user_type":"expert","user_level":"3","username":"name"}"""
 //
 //    val people = spark.read.json(jsonS)
@@ -72,7 +79,7 @@ object KafkaCassandra {
     props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
     props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
     val producer = new KafkaProducer[String, String](props)
-    val record = new ProducerRecord[String, String](topic, "key3", """{"upline":"uplineeg","halfdate":"2019-5-29","currency":"$","bet_type_ocode":"ocode","user_type":"expert","user_level":"3","username":"name"}""")
+    val record = new ProducerRecord[String, String](topic, "key3", "12345")
     producer.send(record)
     producer.close()
   }

@@ -4,7 +4,7 @@
 		module="game-realtime$sources"
 		revision="0.1"
 		status="integration"
-		publication="20190610135830"
+		publication="20190611085714"
 	/>
 	<configurations>
 		<conf name="compile" visibility="public" description=""/>
