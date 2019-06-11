@@ -5,7 +5,6 @@ import com.datastax.spark.connector._
 import org.apache.kafka.clients.consumer.{ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.clients.producer._
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.JavaConversions._
@@ -33,21 +32,7 @@ object KafkaCassandra {
     val gameDF= sql.read.json("C:\\Users\\m.dharini\\Documents\\Game-RealTime\\src\\main\\scala\\gameData.json")
     gameDF.printSchema()
     gameDF.show()
-    gameDF.write.format("org.apache.spark.sql.cassandra").options(Map( "table" -> "winloss", "keyspace" -> "slotty")).save()
-    val ssc = new StreamingContext(conf, Seconds(1))
-
-    val df = sparkSession
-      .read
-      .format("org.apache.spark.sql.cassandra")
-      .options(
-        Map(
-          "table" -> "game_transaction_by_upline",
-          "keyspace" -> "slotty"
-        )
-      )
-      .load()
-
-    df.count() should be(1000)
+  //  gameDF.write.format("org.apache.spark.sql.cassandra").options(Map( "table" -> "winloss", "keyspace" -> "slotty")).save()
 
     //get a json Record from the API and stream to Kafka
     //write json to the Table "winloss"
@@ -59,10 +44,16 @@ object KafkaCassandra {
 //   val sqlContext = new SQLContext(sc)
 //    val json = sc.parallelize(Seq("""{"user":"helena","commits":98, "month":12, "year":2014}""","""{"user":"pkolaczk", "commits":42, "month":12, "year":2014}"""))
 //
-//    sqlContext.jsonRDD(json).map(MonthlyCommits(_)).saveToCassandra("githubstats","monthly_commits")
+//    sql.jsonRDD(json).map("winloss").saveToCassandra("slotty","Initial Commit")
 //
-//    sc.cassandraTable[MonthlyCommits]("githubstats","monthly_commits").collect foreach println
+//    sc.cassandraTable["winloss"]("slotty","winloss").collect foreach println
     //case class model(upline: String, halfdate: String,currency:String,bet_type_ocode:String,user_type:String, user_level:String, username:String)
+
+    val df = sql.read
+      .format("org.apache.spark.sql.cassandra")
+      .options(Map( "table" -> "game_transaction_by_upline", "keyspace" -> "slotty" ))
+      .load()
+    df.show
 
 //    val collection = sc.parallelize(Seq("uplineeg","2019-5-29", "$","ocode","expert","3","name"))
 //    collection.saveToCassandra("slotty", "winloss", SomeColumns("upline", "halfdate","currency","bet_type_ocode","user_type","user_level","username"))
